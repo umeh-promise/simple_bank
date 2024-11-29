@@ -2,9 +2,10 @@
 INSERT INTO accounts (
   owner,
   balance,
-  currency
+  currency,
+  country_code
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 ) RETURNING *;
 
 
@@ -20,7 +21,7 @@ OFFSET $2;
 
 -- name: UpdateAccount :exec
 UPDATE accounts
-  set balance = $2
+SET balance = $2
 WHERE id = $1;
 
 -- name: DeleteAccount :exec
