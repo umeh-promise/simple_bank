@@ -13,20 +13,27 @@ const createAccount = `-- name: CreateAccount :one
 INSERT INTO accounts (
   owner,
   balance,
-  currency
+  currency,
+  country_code
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 ) RETURNING id, owner, balance, currency, country_code, created_at
 `
 
 type CreateAccountParams struct {
-	Owner    string `json:"owner"`
-	Balance  int64  `json:"balance"`
-	Currency string `json:"currency"`
+	Owner       string `json:"owner"`
+	Balance     int64  `json:"balance"`
+	Currency    string `json:"currency"`
+	CountryCode int32  `json:"country_code"`
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
-	row := q.db.QueryRowContext(ctx, createAccount, arg.Owner, arg.Balance, arg.Currency)
+	row := q.db.QueryRowContext(ctx, createAccount,
+		arg.Owner,
+		arg.Balance,
+		arg.Currency,
+		arg.CountryCode,
+	)
 	var i Account
 	err := row.Scan(
 		&i.ID,
@@ -111,8 +118,7 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]A
 }
 
 const updateAccount = `-- name: UpdateAccount :exec
-UPDATE accounts
-  set balance = $2
+UPDATE accounts SET balance = $2
 WHERE id = $1
 `
 
