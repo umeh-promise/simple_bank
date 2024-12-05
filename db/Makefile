@@ -20,5 +20,10 @@ test:
 
 server:
 	go run main.go
+	
+mock:
+	mockgen --package mockDB --desti
+nation db/mock/store.go github.com/umeh-promise/simple_bank/db/
+sqlc Store
 
-.PHONY: createdb dropdb migrateup migratedown sqlc test server
+.PHONY: createdb dropdb migrateup migratedown sqlc test server mock
