@@ -2,15 +2,16 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 	db "github.com/umeh-promise/simple_bank/db/sqlc"
+	"github.com/umeh-promise/simple_bank/token"
 )
 
 type CreateAccountRequest struct {
-	Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,oneof=USD EUR"`
 }
 
@@ -21,8 +22,10 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		return
 	}
 
+	authorizationPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
 	arg := db.CreateAccountParams{
-		Owner:       request.Owner,
+		Owner:       authorizationPayload.Username,
 		Currency:    request.Currency,
 		Balance:     0,
 		CountryCode: 234,
@@ -65,6 +68,14 @@ func (server *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
+	authorizationPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	if account.Owner != authorizationPayload.Username {
+		err := errors.New("Account does not belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, account)
 
 }
@@ -81,7 +92,9 @@ func (server *Server) listAccounts(ctx *gin.Context) {
 		return
 	}
 
+	authorizationPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	arg := db.ListAccountsParams{
+		Owner:  authorizationPayload.Username,
 		Limit:  request.PageSize,
 		Offset: (request.PageID - 1) * request.PageSize,
 	}
