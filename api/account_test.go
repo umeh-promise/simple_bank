@@ -99,7 +99,7 @@ func TestGetAccountApi(t *testing.T) {
 			tc.buildStubs(store)
 
 			// start test http server
-			server := NewServer(store)
+			server := newTestServer(t, store)
 
 			recorder := httptest.NewRecorder()
 
